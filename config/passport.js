@@ -78,16 +78,15 @@ passport.use(new InstagramStrategy({
  * Sign in using Email and Password.
  */
 passport.use(new LocalStrategy({ usernameField: 'email' }, function(email, password, done) {
-  email = email.toLowerCase();
-  User.findOne({ email: email }, function(err, user) {
+  User.findOne({ email: email.toLowerCase() }, function(err, user) {
     if (!user) {
-      return done(null, false, { message: 'Email ' + email + ' not found'});
+      return done(null, false, { msg: 'Email ' + email + ' not found.' });
     }
     user.comparePassword(password, function(err, isMatch) {
       if (isMatch) {
         return done(null, user);
       } else {
-        return done(null, false, { message: 'Invalid email or password.' });
+        return done(null, false, { msg: 'Invalid email or password.' });
       }
     });
   });
@@ -127,7 +126,7 @@ passport.use(new FacebookStrategy({
         User.findById(req.user.id, function(err, user) {
           user.facebook = profile.id;
           user.tokens.push({ kind: 'facebook', accessToken: accessToken });
-          user.profile.name = user.profile.name || profile.displayName;
+          user.profile.name = user.profile.name || profile.name.givenName + ' ' + profile.name.familyName;
           user.profile.gender = user.profile.gender || profile._json.gender;
           user.profile.picture = user.profile.picture || 'https://graph.facebook.com/' + profile.id + '/picture?type=large';
           user.save(function(err) {
@@ -151,7 +150,7 @@ passport.use(new FacebookStrategy({
           user.email = profile._json.email;
           user.facebook = profile.id;
           user.tokens.push({ kind: 'facebook', accessToken: accessToken });
-          user.profile.name = profile.displayName;
+          user.profile.name = profile.name.givenName + ' ' + profile.name.familyName;
           user.profile.gender = profile._json.gender;
           user.profile.picture = 'https://graph.facebook.com/' + profile.id + '/picture?type=large';
           user.profile.location = (profile._json.location) ? profile._json.location.name : '';
@@ -247,7 +246,6 @@ passport.use(new TwitterStrategy({
         });
       }
     });
-
   } else {
     User.findOne({ twitter: profile.id }, function(err, existingUser) {
       if (existingUser) {
@@ -480,6 +478,27 @@ passport.use(new OpenIDStrategy({
     });
   });
 }));
+
+/**
+ * Pinterest API OAuth.
+ */
+passport.use('pinterest', new OAuth2Strategy({
+    authorizationURL: 'https://api.pinterest.com/oauth/',
+    tokenURL: 'https://api.pinterest.com/v1/oauth/token',
+    clientID: process.env.PINTEREST_ID,
+    clientSecret: process.env.PINTEREST_SECRET,
+    callbackURL: process.env.PINTEREST_REDIRECT_URL,
+    passReqToCallback: true
+  },
+  function(req, accessToken, refreshToken, profile, done) {
+    User.findById(req.user._id, function(err, user) {
+      user.tokens.push({ kind: 'pinterest', accessToken: accessToken });
+      user.save(function(err) {
+        done(err, user);
+      });
+    });
+  }
+));
 
 /**
  * Login Required middleware.

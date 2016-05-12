@@ -1,3 +1,6 @@
+var _ = require('lodash');
+var async = require('async');
+
 /**
  * Split into declaration and initialization for better startup performance.
  */
@@ -19,10 +22,6 @@ var lob;
 var ig;
 var Y;
 var request;
-
-var _ = require('lodash');
-var async = require('async');
-var querystring = require('querystring');
 
 /**
  * GET /api
@@ -146,9 +145,6 @@ exports.getScraping = function(req, res, next) {
   request = require('request');
 
   request.get('https://news.ycombinator.com/', function(err, request, body) {
-    if (err) {
-      return next(err);
-    }
     var $ = cheerio.load(body);
     var links = [];
     $('.title a[href^="http"], a[href^="https"]').each(function() {
@@ -171,7 +167,7 @@ exports.getGithub = function(req, res, next) {
   var token = _.find(req.user.tokens, { kind: 'github' });
   var github = new Github({ token: token.accessToken });
   var repo = github.getRepo('sahat', 'requirejs-library');
-  repo.show(function(err, repo) {
+  repo.getDetails(function(err, repo) {
     if (err) {
       return next(err);
     }
@@ -200,18 +196,14 @@ exports.getAviary = function(req, res) {
 exports.getNewYorkTimes = function(req, res, next) {
   request = require('request');
 
-  var query = querystring.stringify({
-    'api-key': process.env.NYT_KEY,
-    'list-name': 'young-adult'
-  });
-  var url = 'http://api.nytimes.com/svc/books/v2/lists?' + query;
+  var query = {
+    'list-name': 'young-adult',
+    'api-key': process.env.NYT_KEY
+  };
 
-  request.get(url, function(err, request, body) {
-    if (err) {
-      return next(err);
-    }
+  request.get({ url: 'http://api.nytimes.com/svc/books/v2/lists', qs: query }, function(err, request, body) {
     if (request.statusCode === 403) {
-      return next(Error('Missing or Invalid New York Times API Key'));
+      return next(new Error('Invalid New York Times API Key'));
     }
     var bestsellers = JSON.parse(body);
     res.render('api/nyt', {
@@ -367,22 +359,21 @@ exports.getSteam = function(req, res, next) {
   request = require('request');
 
   var steamId = '76561197982488301';
-  var query = { l: 'english', steamid: steamId, key: process.env.STEAM_KEY };
+  var params = { l: 'english', steamid: steamId, key: process.env.STEAM_KEY };
+
   async.parallel({
     playerAchievements: function(done) {
-      query.appid = '49520';
-      var qs = querystring.stringify(query);
-      request.get({ url: 'http://api.steampowered.com/ISteamUserStats/GetPlayerAchievements/v0001/?' + qs, json: true }, function(error, request, body) {
+      params.appid = '49520';
+      request.get({ url: 'http://api.steampowered.com/ISteamUserStats/GetPlayerAchievements/v0001/', qs: params, json: true }, function(err, request, body) {
         if (request.statusCode === 401) {
-          return done(new Error('Missing or Invalid Steam API Key'));
+          return done(new Error('Invalid Steam API Key'));
         }
-        done(error, body);
+        done(err, body);
       });
     },
     playerSummaries: function(done) {
-      query.steamids = steamId;
-      var qs = querystring.stringify(query);
-      request.get({ url: 'http://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?' + qs, json: true }, function(err, request, body) {
+      params.steamids = steamId;
+      request.get({ url: 'http://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/', qs: params, json: true }, function(err, request, body) {
         if (request.statusCode === 401) {
           return done(new Error('Missing or Invalid Steam API Key'));
         }
@@ -390,10 +381,9 @@ exports.getSteam = function(req, res, next) {
       });
     },
     ownedGames: function(done) {
-      query.include_appinfo = 1;
-      query.include_played_free_games = 1;
-      var qs = querystring.stringify(query);
-      request.get({ url: 'http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?' + qs, json: true }, function(err, request, body) {
+      params.include_appinfo = 1;
+      params.include_played_free_games = 1;
+      request.get({ url: 'http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/', qs: params, json: true }, function(err, request, body) {
         if (request.statusCode === 401) {
           return done(new Error('Missing or Invalid Steam API Key'));
         }
@@ -442,7 +432,7 @@ exports.postStripe = function(req, res, next) {
   }, function(err, charge) {
     if (err && err.type === 'StripeCardError') {
       req.flash('errors', { msg: 'Your card has been declined.' });
-      res.redirect('/api/stripe');
+      return res.redirect('/api/stripe');
     }
     req.flash('success', { msg: 'Your card has been charged successfully.' });
     res.redirect('/api/stripe');
@@ -529,16 +519,16 @@ exports.getVenmo = function(req, res, next) {
   request = require('request');
 
   var token = _.find(req.user.tokens, { kind: 'venmo' });
-  var query = querystring.stringify({ access_token: token.accessToken });
+  var query = { access_token: token.accessToken };
 
   async.parallel({
     getProfile: function(done) {
-      request.get({ url: 'https://api.venmo.com/v1/me?' + query, json: true }, function(err, request, body) {
+      request.get({ url: 'https://api.venmo.com/v1/me', qs: query, json: true }, function(err, request, body) {
         done(err, body);
       });
     },
     getRecentPayments: function(done) {
-      request.get({ url: 'https://api.venmo.com/v1/payments?' + query, json: true }, function(err, request, body) {
+      request.get({ url: 'https://api.venmo.com/v1/payments', qs: query, json: true }, function(err, request, body) {
         done(err, body);
       });
     }
@@ -671,13 +661,29 @@ exports.getInstagram = function(req, res, next) {
 exports.getYahoo = function(req, res) {
   Y = require('yui/yql');
 
-  Y.YQL('SELECT * FROM weather.forecast WHERE (location = 10007)', function(response) {
-    var location = response.query.results.channel.location;
-    var condition = response.query.results.channel.item.condition;
+  async.parallel([
+    function getFinanceStocks(done) {
+      Y.YQL('SELECT * FROM yahoo.finance.quote WHERE symbol in ("YHOO", "TSLA", "GOOG", "MSFT")', function(response) {
+        var quotes = response.query.results.quote;
+        done(null, quotes);
+      });
+    },
+    function getWeatherReport(done) {
+      Y.YQL('SELECT * FROM weather.forecast WHERE woeid in (SELECT woeid FROM geo.places(1) WHERE text="nome, ak")', function(response) {
+        var location = response.query.results.channel.location;
+        var condition = response.query.results.channel.item.condition;
+        done(null, { location: location, condition: condition });
+      });
+    }
+  ], function(err, results) {
+    var quotes = results[0];
+    var weather = results[1];
+
     res.render('api/yahoo', {
       title: 'Yahoo API',
-      location: location,
-      condition: condition
+      quotes: quotes,
+      location: weather.location,
+      condition: weather.condition
     });
   });
 };
@@ -701,8 +707,8 @@ exports.getPayPal = function(req, res, next) {
       payment_method: 'paypal'
     },
     redirect_urls: {
-      return_url: '/api/paypal/success',
-      cancel_url: '/api/paypal/cancel'
+      return_url: process.env.PAYPAL_RETURN_URL,
+      cancel_url: process.env.PAYPAL_CANCEL_URL
     },
     transactions: [{
       description: 'Hackathon Starter',
@@ -861,4 +867,62 @@ exports.getFileUpload = function(req, res, next) {
 exports.postFileUpload = function(req, res, next) {
   req.flash('success', { msg: 'File was uploaded successfully.'});
   res.redirect('/api/upload');
+};
+
+/**
+ * GET /api/pinterest
+ * Pinterest API example.
+ */
+exports.getPinterest = function(req, res, next) {
+  request = require('request');
+
+  var token = _.find(req.user.tokens, { kind: 'pinterest' });
+  request.get({ url: 'https://api.pinterest.com/v1/me/boards/', qs: { access_token: token.accessToken }, json: true }, function(err, request, body) {
+    if (err) {
+      return next(err);
+    }
+
+    res.render('api/pinterest', {
+      title: 'Pinterest API',
+      boards: body.data
+    });
+  });
+};
+
+/**
+ * POST /api/pinterest
+ * Create a pin.
+ */
+exports.postPinterest = function(req, res, next) {
+  req.assert('board', 'Board is required.').notEmpty();
+  req.assert('note', 'Note cannot be blank.').notEmpty();
+  req.assert('image_url', 'Image URL cannot be blank.').notEmpty();
+
+  var errors = req.validationErrors();
+
+  if (errors) {
+    req.flash('errors', errors);
+    return res.redirect('/api/pinterest');
+  }
+
+  request = require('request');
+
+  var token = _.find(req.user.tokens, { kind: 'pinterest' });
+  var formData = {
+    board: req.body.board,
+    note: req.body.note,
+    link: req.body.link,
+    image_url: req.body.image_url
+  };
+  request.post('https://api.pinterest.com/v1/pins/', { qs: { access_token: token.accessToken }, form: formData }, function(err, request, body) {
+    if (err) {
+      return next(err);
+    }
+    if (request.statusCode !== 201) {
+      req.flash('errors', { msg: JSON.parse(body).message });
+      return res.redirect('/api/pinterest');
+    }
+    req.flash('success', { msg: 'Pin created' });
+    res.redirect('/api/pinterest');
+  });
 };

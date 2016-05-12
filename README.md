@@ -6,7 +6,7 @@ Hackathon Starter [![Dependency Status](https://david-dm.org/sahat/hackathon-sta
 
 **Live Demo**: http://hackathonstarter.herokuapp.com
 
-Jump to [What's new in 3.4.1?](#changelog)
+Jump to [What's new in 3.5.0?](#changelog)
 
 A boilerplate for **Node.js** web applications.
 
@@ -39,7 +39,6 @@ Table of Contents
 - [Features](#features)
 - [Prerequisites](#prerequisites)
 - [Getting Started](#getting-started)
-- [Generator](#generator)
 - [Obtaining API Keys](#obtaining-api-keys)
 - [Project Structure](#project-structure)
 - [List of Packages](#list-of-packages)
@@ -120,22 +119,6 @@ server. Once installed, instead of `node app.js` use `nodemon app.js`. It will
 save you a lot of time in the long run, because you won't need to manually
 restart the server each time you make a small change in code. To install, run
 `sudo npm install -g nodemon`.
-
-Generator
----------
-
-Hackathon Starter Generator is tightly coupled to the project code. As soon as you
-start changing and moving things around, it will probably no longer work as
-expected. That is why it's best to use when you first download the project.
-
-Currently it supports switching between SendGrid, Mailgun and Mandrill email
-services and adding a Node.js cluster support.
-
-To get started, run: `node setup.js`.
-
-**Note:** Generator has a "destructive" behavior, it will physically
-modify your code. *There is no undo action.* To be on a safe side, always commit
-your code to Git, so you could go back and revert the changes.
 
 Obtaining API Keys
 ------------------
@@ -306,14 +289,6 @@ The same goes for other providers.
 
 <hr>
 
-<img src="http://cdn.appstorm.net/web.appstorm.net/web/files/2013/12/mandrill-logo.png" width="100">
-- Go to http://mandrill.com
-- Sign up and add your *Domain Name*
-- From the dashboard, click on *Get SMTP credentials*
-- Copy and paste the default SMTP *Login* and *Password* into `.env` file
-
-<hr>
-
 <img src="https://www.bitgo.com/img/new_bitgo/logo_footer.png" width="200">
 - Go to https://test.bitgo.com/
 - Sign up for an account.
@@ -342,8 +317,8 @@ Project Structure
 | **public**/                        | Static assets (fonts, css, js, img).                         |
 | **public**/**js**/application.js   | Specify client-side JavaScript dependencies.                 |
 | **public**/**js**/main.js          | Place your client-side JavaScript here.                      |
-| **public**/**css**/main.less       | Main stylesheet for your app.                                |
-| **public/css/themes**/default.less | Some Bootstrap overrides to make it look prettier.           |
+| **public**/**css**/main.scss       | Main stylesheet for your app.                                |
+| **public/css/themes**/default.scss | Some Bootstrap overrides to make it look prettier.           |
 | **views/account**/                 | Templates for *login, password reset, signup, profile*.      |
 | **views/api**/                     | Templates for API Examples.                                  |
 | **views/partials**/flash.jade      | Error, info and success flash notifications.                 |
@@ -353,8 +328,8 @@ Project Structure
 | **views**/home.jade                | Home page template.                                          |
 | .travis.yml                        | [Travis CI](https://travis-ci.org/) integration.             |
 | .env.example                       | Your API keys, tokens, passwords and database URI.           |
-| app.js                             | Main application file.                                       |
-| setup.js                           | Tool for removing authentication providers and other things. |
+| app.js                             | The main application file.                                   |
+| package.json                       | NPM dependencies.                                            |
 
 **Note:** There is no preference how you name or structure your views.
 You could place all your templates in a top-level `views` directory without
@@ -376,12 +351,10 @@ List of Packages
 | dotenv                          | Loads environment variables from .env file.                                                |
 | express                         | Node.js web framework.                                                |
 | body-parser                     | Express 4 middleware.                                                 |
-| cookie-parser                   | Express 4 middleware.                                                 |
 | express-session                 | Express 4 middleware.                                                 |
 | morgan                          | Express 4 middleware.                                                 |
 | compression                     | Express 4 middleware.                                                 |
 | errorhandler                    | Express 4 middleware.                                                 |
-| method-override                 | Express 4 middleware.                                                 |
 | serve-favicon                   | Express 4 middleware offering favicon serving and caching.            |
 | express-flash                   | Provides flash messages for Express.                                  |
 | express-validator               | Easy form validation for Express.                                     |
@@ -417,8 +390,6 @@ List of Packages
 | mocha                           | Test framework.                                                       |
 | chai                            | BDD/TDD assertion library.                                            |
 | supertest                       | HTTP assertion library.                                               |
-| multiline                       | Multi-line strings for the generator.                                 |
-| blessed                         | Interactive command line interface for the generator.                 |
 | yui                             | Used by the Yahoo API example.                                        |
 
 Useful Tools and Resources
@@ -506,24 +477,6 @@ specify a list of routes that should bypass CSRF verification check.
 **Note 2:** To whitelist dynamic URLs use regular expression tests inside the
 CSRF middleware to see if `req.originalUrl` matches your desired pattern.
 
-### What is cluster_app.js?
-
-**Note**: It is now part of the generator as of **v2.1**.
-
-From the [Node.js Documentation](http://nodejs.org/api/cluster.html#cluster_how_it_works):
-> A single instance of Node runs in a single thread. To take advantage of multi-core systems
-> the user will sometimes want to launch a cluster of Node processes to handle the load.
-> The cluster module allows you to easily create child processes that all share server ports.
-
-Running `cluster_app.js` allows you to take advantage of this feature by forking
-a process of `app.js` for each detected CPU. For the majority of applications
-serving HTTP requests, this is a nice benefit. However, the cluster module is
-still in experimental stage, therefore it should only be used after understanding
-its purpose and behavior. To use it, simply run `node cluster_app.js`.
-**Its use is entirely optional and `app.js` is not tied in any way to it**.
-As a reminder, if you plan to use `cluster_app.js` instead of `app.js`,
-be sure to indicate that in `package.json` when you are ready to deploy your app.
-
 ### I am getting MongoDB Connection Error, how do I fix it?
 That's a custom error message defined in `app.js` to indicate that there was a
 problem connecting to MongoDB:
@@ -539,7 +492,7 @@ download MongoDB [here](http://mongodb.org/downloads), or install it via a packa
 Windows users, read [Install MongoDB on Windows](https://docs.mongodb.org/manual/tutorial/install-mongodb-on-windows/).
 
 **Tip:** If you are always connected to the internet, you could just use
-[MongoLab](https://mongolab.com/) or [Compose](https://www.compose.io/) instead
+[mLab](https://mongolab.com/) or [Compose](https://www.compose.io/) instead
 of downloading and installing MongoDB locally. You will only need to update database credentials
 in `.env` file.
 
@@ -547,10 +500,10 @@ in `.env` file.
 Chances are you haven't changed the *Database URI* in `.env`. If `MONGODB`/`MONGOLAB_URI` is
 set to `localhost`, it will only work on your machine as long as MongoDB is
 running. When you deploy to Heroku, OpenShift or some other provider, you will not have MongoDB
-running on `localhost`. You need to create an account with [MongoLab](https://mongolab.com/)
+running on `localhost`. You need to create an account with [mLab](https://mongolab.com/)
 or [Compose](https://www.compose.io/), then create a free tier database.
 See [Deployment](#deployment) for more information on how to setup an account
-and a new database step-by-step with MongoLab.
+and a new database step-by-step with mLab.
 
 ### Why Jade instead of Handlebars?
 When I first started this project I didn't have any experience with Handlebars. Since then I have worked on Ember.js apps and got myself familiar with the Handlebars syntax. While it is true Handlebars is easier, because it looks like good old HTML, I have no regrets picking Jade over Handlebars. First off, it's the default template engine in Express, so someone who has built Express apps in the past already knows it. Secondly, I find `extends` and `block` to be indispensable, which as far as I know, Handlebars does not have out of the box. And lastly, subjectively speaking, Jade looks much cleaner and shorter than Handlebars, or any non-HAML style for that matter.
@@ -582,10 +535,8 @@ If you would like to use **Persona** authentication strategy, use the
 reference guide. I have explained my reasons why it could not be merged in
 [issue #63](https://github.com/sahat/hackathon-starter/issues/63#issuecomment-34898290).
 
-### How do I switch SendGrid for another email delivery service?
-Run `node setup.js` bundled with Hackathon Starter, then select
-**Email Service** option. It will automatically replace appropriate strings in
-your code. Currently there are three options: SendGrid, Mandrill, and Mailgun.
+### How do I switch SendGrid for another email delivery service, like Mailgun or SparkPost?
+Inside the `nodemailer.createTransport` method arguments, simply change the service from `'Sendgrid'` to some other email service. Also, be sure to update both username and password below that. See the [list of all supported services](https://github.com/nodemailer/nodemailer-wellknown#supported-services) by Nodemailer.
 
 How It Works (mini guides)
 --------------------------
@@ -1032,7 +983,7 @@ a cloud platform to host it. These are not the only choices, but they are my top
 picks. From my experience, **Heroku** is the easiest to get started with, it will
 automatically restart your Node.js process when it crashes, zero-downtime
 deployments and custom domain support on free accounts. Additionally, you can
-create an account with **MongoLab** and then pick one of the *4* providers below.
+create an account with **mLab** and then pick one of the *4* providers below.
 Again, there are plenty of other choices and you are not limited to just the ones
 listed below.
 
@@ -1042,7 +993,7 @@ listed below.
 - Download and install [Heroku Toolbelt](https://toolbelt.heroku.com/)
 - In terminal, run `heroku login` and enter your Heroku credentials
 - From *your app* directory run `heroku create`
-- Run `heroku addons:create mongolab`.  This will set up the MongoLab add-on and configure the `MONGOLAB_URI` environment variable in your Heroku app for you.
+- Run `heroku addons:create mongolab`.  This will set up the mLab add-on and configure the `MONGOLAB_URI` environment variable in your Heroku app for you.
 - Lastly, do `git push heroku master`.  Done!
 
 **Note:** To install Heroku add-ons your account must be verified.
@@ -1050,7 +1001,7 @@ listed below.
 ---
 
 <img src="http://i.imgur.com/7KnCa5a.png" width="200">
-- Open [mongolab.com](https://mongolab.com) website
+- Open [mlab.com](https://mlab.com) website
 - Click the yellow **Sign up** button
 - Fill in your user information then hit **Create account**
 - From the dashboard, click on **:zap:Create new** button
@@ -1067,7 +1018,7 @@ listed below.
 - Finally, in `.env` instead of `mongodb://localhost:27017/test`, use the following URI with your credentials:
  - `db: 'mongodb://USERNAME:PASSWORD@ds027479.mongolab.com:27479/DATABASE_NAME'`
 
-**Note:** As an alternative to MongoLab, there is also [Compose](https://www.compose.io/).
+**Note:** As an alternative to mLab, there is also [Compose](https://www.compose.io/).
 
 
 <img src="http://www.opencloudconf.com/images/openshift_logo.png" width="200">
@@ -1143,6 +1094,14 @@ Also, be sure to check out the [Jump-start your hackathon efforts with DevOps Se
 
 Changelog
 ---------
+
+### 3.5.0 (March 4, 2016)
+- Added file upload example
+- Added Pinterest API example
+- Added timestamp support to the User schema
+- Fixed `next` parameter being *undefined* inside `getReset` handler
+- Refactored querysting param usage in *api.js* controller
+- Removed *setup.js* (generator) due to its limited functionality and a lack of updates
 
 ### 3.4.1 (February 6, 2016)
 - Added "Obtaining Twilio API Keys" instructions.
@@ -1246,7 +1205,7 @@ Changelog
 - Font Awesome 4.2.0 [01e7bd5c09926911ca856fe4990e6067d9148694](https://github.com/sahat/hackathon-starter/commit/01e7bd5c09926911ca856fe4990e6067d9148694)
 - Code cleanup in `app.js` and `controllers/api.js`. [8ce48f767c0146062296685cc101acf3d5d224d9](https://github.com/sahat/hackathon-starter/commit/8ce48f767c0146062296685cc101acf3d5d224d9) [cdbb9d1888a96bbba92d4d14deec99a8acba2618](https://github.com/sahat/hackathon-starter/commit/cdbb9d1888a96bbba92d4d14deec99a8acba2618)
 - Updated Stripe API example. [afef373cd57b6a44bf856eb093e8f2801fc2dbe2](https://github.com/sahat/hackathon-starter/commit/afef373cd57b6a44bf856eb093e8f2801fc2dbe2)
-- Added 1-step deployment process with Heroku and MongoLab add-on. [c5def7b7b3b98462e9a2e7896dc11aaec1a48b3f](https://github.com/sahat/hackathon-starter/commit/c5def7b7b3b98462e9a2e7896dc11aaec1a48b3f)
+- Added 1-step deployment process with Heroku and mLab add-on. [c5def7b7b3b98462e9a2e7896dc11aaec1a48b3f](https://github.com/sahat/hackathon-starter/commit/c5def7b7b3b98462e9a2e7896dc11aaec1a48b3f)
 - Updated Twitter apps dashboard url. [e378fbbc24e269de69494d326bc20fcb641c0697](https://github.com/sahat/hackathon-starter/commit/e378fbbc24e269de69494d326bc20fcb641c0697)
 - Fixed dead links in the README. [78fac5489c596e8bcef0ab11a96e654335573bb4](https://github.com/sahat/hackathon-starter/commit/78fac5489c596e8bcef0ab11a96e654335573bb4)
 
